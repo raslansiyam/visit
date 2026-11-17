@@ -4,7 +4,7 @@ const BASE=JSON.stringify(D.classes);
 let tab='att',day=0,ci=0,over='';
 let P={S:{},T:{},B:{},dirty:{},url:'',by:'',last:0,ops:{},dops:{}};
 try{P=Object.assign(P,JSON.parse(localStorage.getItem('att5_'+window.__K)||'{}'))}catch(e){}
-P.url='https://script.google.com/macros/s/AKfycbw5KjXntvX_oraaN0MSvdHD_6u9J6yC3OUUzI6A1n5ZKW5tFXDXjFVEsGAU-k2hsKNp/exec';
+P.url='https://script.google.com/macros/s/AKfycbyYVVeczqECDZGrU5VKWk497AZy4Ik4mNaxAbkC0pGqvdMzoLRgXC3SKzC33gU9J_N9/exec';
 const S=P.S,$=id=>document.getElementById(id);
 const persist=()=>{try{localStorage.setItem('att5_'+window.__K,JSON.stringify(P))}catch(e){}};
 const key=(c,d)=>c+'_'+d;
