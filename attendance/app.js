@@ -214,6 +214,117 @@ function auto(){return todayIdx()}
 const escN=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const absN=(c,d)=>{const v=get(c,d),s=D.classes[c].s;const a=[];for(let i=0;i<v.length;i++){if((v[i]==='g'||v[i]==='e')&&!nj(c,i,d))a.push(escN(s[i][0])+(v[i]==='e'?' (بإذن)':''))}return a.join('، ')};
 const lvN=(c,d)=>{const v=get(c,d),s=D.classes[c].s,R={p:'بإذن',w:'مع ولي الأمر',c:'باتصال'};const a=[];for(let i=0;i<v.length;i++){if(R[v[i]]&&!nj(c,i,d))a.push(escN(s[i][0])+' ('+R[v[i]]+')')}return a.join('، ')};
+
+function recList(d){
+  const th=+(P.rth||3),bas=P.rbas||'all',out=[];
+  D.classes.forEach((c,i)=>{c.s.forEach((s,k)=>{
+    if(s[3]!=null&&(s[2]||0)>=s[3])return;
+    let u=0,x=0;const ds=[];
+    for(let j=S0;j<=d;j++){if(nj(i,k,j))continue;const ch=(get(i,j)||'')[k];
+      if(ch==='g'){u++;ds.push(D.days[j])}else if(ch==='e'){x++;if(bas==='all')ds.push(D.days[j]+' (بإذن)')}}
+    const n=bas==='all'?u+x:u;
+    if(n>=th)out.push({c:i,k,cn:c.n,name:s[0],n,u,x,ds,ph:s[4]||''})});});
+  out.sort((a,b)=>b.n-a.n||a.c-b.c);return out;
+}
+function recText(d){
+  const L=recList(d),th=+(P.rth||3);
+  let t='الغياب المتكرر ('+th+' أيام فأكثر'+((P.rbas||'all')==='all'?'':' – بدون إذن')+') حتى '+D.days[d]+' – '+L.length+' طالبة';
+  let last='';L.forEach(r=>{if(r.cn!==last){t+='\n'+r.cn+':';last=r.cn}t+='\n- '+r.name+' ('+r.n+')'});
+  return t;
+}
+
+function saveBlob(name,blob){
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),1500);
+}
+const CRC=(()=>{const t=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+const crc32=b=>{let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=CRC[(c^b[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0};
+function zipStore(files){
+  const te=new TextEncoder(),parts=[],cd=[];let off=0;
+  const u16=n=>[n&255,(n>>8)&255],u32=n=>[n&255,(n>>8)&255,(n>>16)&255,(n>>>24)&255];
+  files.forEach(([nm,txt])=>{
+    const nb=te.encode(nm),db=te.encode(txt),c=crc32(db);
+    const lh=new Uint8Array([0x50,0x4b,3,4,20,0,0,8,0,0,0,0,0x21,0,...u32(c),...u32(db.length),...u32(db.length),...u16(nb.length),0,0]);
+    parts.push(lh,nb,db);
+    cd.push(new Uint8Array([0x50,0x4b,1,2,20,0,20,0,0,8,0,0,0,0,0x21,0,...u32(c),...u32(db.length),...u32(db.length),...u16(nb.length),0,0,0,0,0,0,0,0,0,0,0,0,...u32(off)]),nb);
+    off+=lh.length+nb.length+db.length;
+  });
+  let cs=0;cd.forEach(x=>cs+=x.length);
+  const end=new Uint8Array([0x50,0x4b,5,6,0,0,0,0,...u16(files.length),...u16(files.length),...u32(cs),...u32(off),0,0]);
+  return new Blob([...parts,...cd,end],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+const xe=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g,'');
+function colL(i){let s='';i++;while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=(i-m-1)/26|0}return s}
+function saveXlsx(name,rows,widths,sheet){
+  const sd=rows.map((r,ri)=>`<row r="${ri+1}">`+r.map((v,ci)=>{const ref=colL(ci)+(ri+1),st=ri===0?' s="1"':'';return typeof v==='number'?`<c r="${ref}"${st}><v>${v}</v></c>`:`<c r="${ref}"${st} t="inlineStr"><is><t xml:space="preserve">${xe(v)}</t></is></c>`}).join('')+'</row>').join('');
+  const cols='<cols>'+widths.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('')+'</cols>';
+  const H='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+  saveBlob(name,zipStore([
+    ['[Content_Types].xml',H+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'],
+    ['_rels/.rels',H+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+    ['xl/workbook.xml',H+'<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="'+xe(sheet||'تقرير')+'" sheetId="1" r:id="rId1"/></sheets></workbook>'],
+    ['xl/_rels/workbook.xml.rels',H+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
+    ['xl/styles.xml',H+'<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Arial"/></font><font><b/><sz val="11"/><name val="Arial"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFD9E8F5"/></patternFill></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf/></cellStyleXfs><cellXfs count="2"><xf/><xf fontId="1" fillId="2" applyFont="1" applyFill="1"/></cellXfs></styleSheet>'],
+    ['xl/worksheets/sheet1.xml',H+'<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView rightToLeft="1" workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'+cols+'<sheetData>'+sd+'</sheetData></worksheet>']
+  ]));
+}
+function savePdf(title,rows,landscape){
+  const hd=rows[0],bd=rows.slice(1);
+  const html='<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>'+xe(title)+'</title><style>@page{size:A4 '+(landscape?'landscape':'portrait')+';margin:10mm}body{font-family:Tahoma,Arial,sans-serif;font-size:'+(landscape?'9':'12')+'px;color:#000}h3,h4,p{text-align:center;margin:2px 0}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{border:1px solid #555;padding:3px 4px;text-align:center}th{background:#e6eef6}tr{page-break-inside:avoid}td.n{text-align:right}</sty'+'le></head><body><p><b>وكالة الغوث الدولية – برنامج التربية والتعليم</b></p><p><b>منطقة غرب الوسطى التعليمية – مدرسة النصيرات المشتركة الإعدادية</b></p><h3>'+xe(title)+'</h3><table><thead><tr>'+hd.map(x=>'<th>'+xe(x)+'</th>').join('')+'</tr></thead><tbody>'+bd.map(r=>'<tr>'+r.map((v,i)=>'<td'+(hd[i]==='الطالبة'?' class="n"':'')+'>'+xe(v)+'</td>').join('')+'</tr>').join('')+'</tbody></table></body></html>';
+  let f=document.getElementById('pf');if(f)f.remove();
+  f=document.createElement('iframe');f.id='pf';f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';document.body.appendChild(f);
+  f.srcdoc=html;f.onload=()=>{try{f.contentWindow.focus();f.contentWindow.print()}catch(e){alert('تعذّرت الطباعة')}};
+}
+function recRows(d){
+  const L=recList(d);
+  return [['م','الصف','الشعبة','الطالبة','عدد الأيام','منها بإذن','الجوال']].concat(L.map((r,i)=>[i+1,r.cn.split(' ')[0],r.cn.split(' ')[1]||'',r.name,r.n,r.x,(r.ph||'').replace('/',' / ')]));
+}
+function daysRows(d){
+  const days=[];for(let j=S0;j<=d;j++)days.push(j);
+  const sym={h:'ح',g:'غ',e:'غ إذن',p:'خ إذن',w:'خ ولي',c:'خ اتصال','-':''};
+  const rows=[['الصف','الشعبة','الطالبة'].concat(days.map(j=>D.days[j])).concat(['حاضرة','غائبة','بإذن','الجوال'])];
+  D.classes.forEach((c,i)=>c.s.forEach((s,k)=>{
+    if(s[3]!=null&&(s[2]||0)>=s[3])return;
+    let h=0,g=0,e=0;
+    const cells=days.map(j=>{if(nj(i,k,j))return'';const ch=(get(i,j)||'')[k]||'-';if(ch==='g')g++;else if(ch==='e'){g++;e++}else if(ch!=='-')h++;return sym[ch]||''});
+    rows.push([c.n.split(' ')[0],c.n.split(' ')[1]||'',s[0]].concat(cells).concat([h,g,e,(s[4]||'').replace('/',' / ')]))}));
+  return rows;
+}
+const fnm=d=>D.dates[d];
+function recXlsx(d){saveXlsx('الغياب_المتكرر_'+fnm(d)+'.xlsx',recRows(d),[5,9,8,34,11,10,26],'الغياب المتكرر')}
+function recPdf(d){savePdf('كشف الغياب المتكرر ('+(+(P.rth||3))+' أيام فأكثر) حتى '+D.days[d],recRows(d),false)}
+function daysXlsx(d){const r=daysRows(d);saveXlsx('ايام_الحضور_والغياب_'+fnm(d)+'.xlsx',r,[8,8,32].concat(r[0].slice(3,-4).map(()=>9)).concat([8,8,8,24]),'الحضور والغياب')}
+function daysPdf(d){savePdf('سجل أيام الحضور والغياب حتى '+D.days[d],daysRows(d),true)}
+const DMSG='السلام عليكم، نفيدكم بأن ابنتكم {الاسم} ({الصف}) غابت {العدد} أيام عن المدرسة. نرجو التواصل مع إدارة المدرسة وإفادتنا بسبب الغياب. مدرسة النصيرات المشتركة الإعدادية';
+function gMsg(r){return (P.rmsg||DMSG).replace(/\{الاسم\}/g,r.name).replace(/\{الصف\}/g,r.cn).replace(/\{العدد\}/g,r.n)}
+function smsG(d,idx){
+  const r=recList(d)[idx];if(!r)return;
+  const ph=(r.ph||'').split('/')[0];
+  if(!ph){alert('لا يوجد رقم جوال لهذه الطالبة');return}
+  P.G=P.G||{};P.G[r.cn+'|'+r.name]=Date.now();persist();
+  location.href='sms:'+ph+(/iPhone|iPad/i.test(navigator.userAgent)?'&':'?')+'body='+encodeURIComponent(gMsg(r));
+}
+function recSms(d){
+  let ph=(P.rph||P.ph||D.phone||'').trim();
+  if(!ph){ph=(prompt('اكتبي رقم الجوال لإرسال القائمة إليه:')||'').trim();if(!ph)return;P.rph=ph;persist()}
+  location.href='sms:'+ph+(/iPhone|iPad/i.test(navigator.userAgent)?'&':'?')+'body='+encodeURIComponent(recText(d));
+}
+function recCopy(d){
+  const t=recText(d);
+  (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>alert('تم النسخ'),()=>{prompt('انسخي النص:',t)});
+}
+function recCard(d){
+  const th=+(P.rth||3),bas=P.rbas||'all',L=recList(d);
+  let b='',last='';
+  L.forEach(r=>{b+=`<tr><td>${r.cn}</td><td style="text-align:right">${escN(r.name)}</td><td class="bad">${r.n}</td><td dir="ltr" style="font-size:12px">${escN(r.ph||'—')}</td><td>${r.ph?`<button onclick="smsG(${d},${L.indexOf(r)})" style="min-height:34px;padding:4px 8px">📩 ولي الأمر</button>${(P.G||{})[r.cn+'|'+r.name]?'<div class="mut" style="font-size:11px">أُرسل ✔</div>':''}`:''}</td></tr>`});
+  return `<div class="card"><h2>الغياب المتكرر حتى ${D.days[d]}</h2>
+<label>عدد أيام الغياب (فأكثر)</label><select onchange="P.rth=+this.value;persist();render()">${[2,3,4,5,6,7,8,10,12,15,20].map(n=>`<option value="${n}" ${n===th?'selected':''}>${n} أيام فأكثر</option>`).join('')}</select>
+<label>طريقة الاحتساب</label><select onchange="P.rbas=this.value;persist();render()"><option value="all" ${bas==='all'?'selected':''}>كل الغياب (مع بإذن)</option><option value="u" ${bas==='u'?'selected':''}>الغياب بدون إذن فقط</option></select>
+<label>رسالة ولي الأمر (يمكن تعديلها: {الاسم} {الصف} {العدد})</label><textarea rows="3" style="width:100%;font:inherit;padding:8px;border-radius:10px;border:1px solid #ccc" onchange="P.rmsg=this.value.trim();persist()">${escN(P.rmsg||DMSG)}</textarea>
+<label>إرسال القائمة كاملة إلى رقم (مثل جوال المديرة)</label><input dir="ltr" inputmode="tel" placeholder="05XXXXXXXX" value="${esc2(P.rph||P.ph||D.phone||'')}" onchange="P.rph=this.value.trim();persist()">
+${L.length?`<table><tr><th>الصف والشعبة</th><th>الطالبة</th><th>عدد الأيام</th><th>الجوال</th><th></th></tr>${b}</table>`:'<p class="mut">لا توجد طالبات بهذا العدد.</p>'}
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button onclick="recSms(${d})">📩 إرسال SMS</button><button onclick="recCopy(${d})">📋 نسخ</button><button onclick="recXlsx(${d})">⬇ كشف الغياب Excel</button><button onclick="recPdf(${d})">⬇ كشف الغياب PDF</button><button onclick="daysXlsx(${d})">⬇ أيام الحضور والغياب Excel</button><button onclick="daysPdf(${d})">⬇ أيام الحضور والغياب PDF</button></div>
+<p class="mut" style="font-size:12px;margin:8px 0 0">زر «ولي الأمر» يفتح الرسائل برقم ولي الأمر ونص جاهز، دون إنترنت. ملف Excel يُحفظ مباشرة في الجهاز. وPDF: اختاري «حفظ بصيغة PDF» من نافذة الطباعة.</p></div>`;
+}
 function rep(){
   const d=over!==''?+over:auto();
   const W=[];for(let j=Math.max(S0,d-8);j<=d;j++)W.push(j);
@@ -231,6 +342,7 @@ function rep(){
   body+=`<tr class="tt"><td>إجمالي المدرسة</td><td>${all.t}</td><td>${all.h}</td><td>${all.g}</td><td>${all.e||''}</td><td>${all.l||''}</td><td>${pct(all.g,all.h)}</td><td></td><td></td><td></td></tr>`;
   let h=`<div class="card"><h2>اليوم المعروض: ${D.days[d]}</h2><select onchange="over=this.value;render()"><option value="">تلقائي (اليوم)</option>${D.days.map((x,i)=>i>todayIdx()||i<S0?'':`<option value="${i}" ${String(over)===String(i)?'selected':''}>${x}</option>`).join('')}</select></div>`;
   h+=`<div class="card"><h2>التقرير اليومي</h2><table><tr><th>الصف</th><th>الطالبات</th><th>حاضرات</th><th>غائبات</th><th>منهن بإذن</th><th>غادرن مبكراً</th><th>الغياب</th><th>الحالة</th><th>أسماء الغائبات</th><th>أسماء من غادرن</th></tr>${body}</table></div>`;
+  h+=recCard(d);
   let rm='';
   D.classes.forEach((c,i)=>{const k=cnt(i,d);if(k.h+k.g>=k.n)return;
     const stt=k.h+k.g===0?'لم يُسجَّل':'ناقص ('+(k.n-k.h-k.g)+')';
@@ -249,6 +361,6 @@ function rep(){
 }
 function render(){
   $('t1').className=tab==='att'?'on':'';$('t2').className=tab==='rep'?'on':'';$('t3').className=tab==='set'?'on':'';$('t4').className=tab==='stu'?'on':'';
-  const y=scrollY;$('app').innerHTML=(D.only!=null&&!P.by)?gate():(tab==='att'?att():tab==='rep'?rep():tab==='stu'?stu():setv());if(tab==='set'){$('by').value=P.by||'';$('u').value=P.url||''}if(D.only!=null){$('t2').style.display='none';$('t4').style.display='none'}scrollTo(0,y);badge();
+  const y=scrollY;$('app').innerHTML=(D.only!=null&&!P.by)?gate():(tab==='att'?att()+(D.only!=null?`<div style="margin:0 12px">${recCard(auto())}</div>`:''):tab==='rep'?rep():tab==='stu'?stu():setv());if(tab==='set'){$('by').value=P.by||'';$('u').value=P.url||''}if(D.only!=null){$('t2').style.display='none';$('t4').style.display='none'}scrollTo(0,y);badge();
 }
 day=todayIdx();render();sync();setInterval(sync,30000);addEventListener('online',sync);

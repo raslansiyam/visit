@@ -73,7 +73,7 @@ select{font:inherit;width:100%;padding:10px;border-radius:10px;border:1px solid 
   function fetchBoot(){return fetch(URL_+'?a=boot&k='+encodeURIComponent(K)).then(function(r){return r.json()}).then(function(j){if(j&&j.ok&&j.d){try{localStorage.setItem('att_boot_'+K,JSON.stringify(j.d))}catch(e){}return j.d}throw new Error('bad')})}
   function run(code,src){var s=document.createElement('script');if(code){s.text=code}else{s.src=src}document.body.appendChild(s)}
   function go(b){window.__BOOT=b;window.__K=K;var c=null;try{c=localStorage.getItem('att_appjs')}catch(e){}
-    if(c){run(c)}else{run(null,'app.js?v=3')}
+    if(c){run(c)}else{run(null,'app.js?v=6')}
     if(navigator.onLine){fetch(URL_+'?a=appjs').then(function(r){return r.text()}).then(function(t){if(t&&t.length>5000&&t.indexOf('window.__BOOT')>0){try{localStorage.setItem('att_appjs',t)}catch(e){}}}).catch(function(){})}}
   if(boot){go(boot);if(navigator.onLine)fetchBoot().catch(function(){})}
   else if(!navigator.onLine){msg('هذه أول مرة تفتحين فيها الرابط، ويلزم <b>إنترنت لمرة واحدة فقط</b> لتحميل قائمة الطالبات، وبعدها تعملين بدون إنترنت.')}
