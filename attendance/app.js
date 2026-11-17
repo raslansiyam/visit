@@ -4,7 +4,7 @@ const BASE=JSON.stringify(D.classes);
 let tab='att',day=0,ci=0,over='';
 let P={S:{},T:{},B:{},dirty:{},url:'',by:'',last:0,ops:{},dops:{}};
 try{P=Object.assign(P,JSON.parse(localStorage.getItem('att5_'+window.__K)||'{}'))}catch(e){}
-P.url='https://script.google.com/macros/s/AKfycbyYVVeczqECDZGrU5VKWk497AZy4Ik4mNaxAbkC0pGqvdMzoLRgXC3SKzC33gU9J_N9/exec';
+P.url='https://script.google.com/macros/s/AKfycbw5KjXntvX_oraaN0MSvdHD_6u9J6yC3OUUzI6A1n5ZKW5tFXDXjFVEsGAU-k2hsKNp/exec';
 const S=P.S,$=id=>document.getElementById(id);
 const persist=()=>{try{localStorage.setItem('att5_'+window.__K,JSON.stringify(P))}catch(e){}};
 const key=(c,d)=>c+'_'+d;
@@ -203,7 +203,7 @@ function att(){
   h+='<div class="acts"><button onclick="fillAll()">✔ الكل حاضرات (غير المسجّلات)</button><button onclick="clearAll()">مسح</button></div>';
   if(k.h+k.g>0)h+=`<div class="card" style="margin:0 12px 8px"><button class="on" style="width:100%" onclick="sendSms()">📩 إرسال التسجيل للمديرة برسالة SMS</button><p class="mut" style="font-size:12px;margin:6px 0 0">تعمل بدون إنترنت. الباقيات غير المسجّلات يُعتبرن حاضرات.</p></div>`;
   if(D.days.some((_,j)=>{const q=cnt(ci,j);return q.h+q.g>0}))h+=`<div class="card" style="margin:0 12px 8px"><button style="width:100%" onclick="exportFile()">💾 حفظ/مشاركة ملف التسجيل (بلوتوث أو Quick Share)</button><p class="mut" style="font-size:12px;margin:6px 0 0">يُنشئ ملفاً بكل أيام هذا الصف، تشاركينه مع المديرة بالبلوتوث أو المشاركة القريبة بدون إنترنت.</p></div>`;
-  h+=c.s.map((s,i)=>{const jn=nj(ci,i,day);if(s[3]!=null&&(s[2]||0)>=s[3])return'';const m=v[i];const cl=jn?'':m==='-'?'':m==='h'?'h':m==='g'?'g':m==='e'?'e':'l';const lbl=jn?((s[2]||0)>day?'لم تنضم':'خرجت'):({h:'حاضرة',g:'غائبة',e:'بإذن',p:'غادرت بإذن',w:'مع ولي الأمر',c:'غادرت باتصال'}[m]||'—');return`<div class="row ${cl}" style="${jn?'opacity:.45':''}" ${jn?'':`onclick="cycle(${i})"`}><span class="n">${i+1}</span><span class="nm">${escN(s[0])}${s[1]?`<span class="nt">${escN(s[1])}</span>`:''}</span><span class="pill">${lbl}</span>${jn?'':`<button class="dots" onclick="event.stopPropagation();openSheet(${i})">⋯</button>`}</div>`}).join('');
+  let vn=0;h+=c.s.map((s,i)=>{const jn=nj(ci,i,day);if(s[3]!=null&&(s[2]||0)>=s[3])return'';if(jn&&s[3]!=null&&day>=s[3])return'';const m=v[i];const cl=jn?'':m==='-'?'':m==='h'?'h':m==='g'?'g':m==='e'?'e':'l';const lbl=jn?((s[2]||0)>day?'لم تنضم':'خرجت'):({h:'حاضرة',g:'غائبة',e:'بإذن',p:'غادرت بإذن',w:'مع ولي الأمر',c:'غادرت باتصال'}[m]||'—');return`<div class="row ${cl}" style="${jn?'opacity:.45':''}" ${jn?'':`onclick="cycle(${i})"`}><span class="n">${++vn}</span><span class="nm">${escN(s[0])}${s[1]?`<span class="nt">${escN(s[1])}</span>`:''}</span><span class="pill">${lbl}</span>${jn?'':`<button class="dots" onclick="event.stopPropagation();openSheet(${i})">⋯</button>`}</div>`}).join('');
   if(shI>=0)h+=sheetHtml();
   if(D.only!=null)h=h.replace(/<div class="lab">الصف<\/div><div class="chips">.*?<\/div>/,'<div class="lab" style="font-size:15px;color:var(--pri);font-weight:700">الصف: '+D.classes[D.only].n+'</div>');
   return h;
