@@ -60,7 +60,7 @@ select{font:inherit;width:100%;padding:10px;border-radius:10px;border:1px solid 
 <main id="app"></main>
 <script>
 (function(){
-  var URL_='https://script.google.com/macros/s/AKfycbyYVVeczqECDZGrU5VKWk497AZy4Ik4mNaxAbkC0pGqvdMzoLRgXC3SKzC33gU9J_N9/exec';
+  var URL_='https://script.google.com/macros/s/AKfycbw5KjXntvX_oraaN0MSvdHD_6u9J6yC3OUUzI6A1n5ZKW5tFXDXjFVEsGAU-k2hsKNp/exec';
   var q=new URLSearchParams(location.search),K=q.get('k');
   try{if(K)localStorage.setItem('att_k',K);else K=localStorage.getItem('att_k')}catch(e){}
   var app=document.getElementById('app');
@@ -71,7 +71,7 @@ select{font:inherit;width:100%;padding:10px;border-radius:10px;border:1px solid 
   if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
   var boot=null;try{boot=JSON.parse(localStorage.getItem('att_boot_'+K))}catch(e){}
   function fetchBoot(){return fetch(URL_+'?a=boot&k='+encodeURIComponent(K)).then(function(r){return r.json()}).then(function(j){if(j&&j.ok&&j.d){try{localStorage.setItem('att_boot_'+K,JSON.stringify(j.d))}catch(e){}return j.d}throw new Error('bad')})}
-  function go(b){window.__BOOT=b;window.__K=K;var s=document.createElement('script');s.src='app.js?v=1';document.body.appendChild(s)}
+  function go(b){window.__BOOT=b;window.__K=K;var s=document.createElement('script');s.src='app.js?v=2';document.body.appendChild(s)}
   if(boot){go(boot);if(navigator.onLine)fetchBoot().catch(function(){})}
   else if(!navigator.onLine){msg('هذه أول مرة تفتحين فيها الرابط، ويلزم <b>إنترنت لمرة واحدة فقط</b> لتحميل قائمة الطالبات، وبعدها تعملين بدون إنترنت.')}
   else{msg('جارٍ التحميل...');fetchBoot().then(go).catch(function(){msg('تعذّر التحميل. تأكدي من الإنترنت وأعيدي المحاولة، أو من صحة الرابط.')})}
