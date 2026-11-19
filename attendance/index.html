@@ -54,6 +54,15 @@ select{font:inherit;width:100%;padding:10px;border-radius:10px;border:1px solid 
 .sheet button{width:100%;margin-top:6px;text-align:right}
 .sm{font-size:12px;min-height:36px;padding:6px 10px}
 .lg{padding:0 14px 6px;font-size:12px;color:var(--mut)}
+.row.r2{flex-wrap:wrap;gap:6px}.row.r2 .r1{display:flex;align-items:center;gap:8px;width:100%}
+.row.r3{flex-wrap:wrap;gap:4px;padding:5px 6px;min-height:46px}.row.r3 .nm{font-size:13.5px;min-width:80px;line-height:1.3}.row.r3 .note{flex-basis:100%}
+.nb{border:0;background:transparent;font-size:14px;padding:0 4px;opacity:.45}.nb.has{opacity:1}
+.btns3{display:flex;gap:3px;direction:rtl}.btns3 .b{min-width:36px;min-height:36px;padding:2px 3px;font-size:11px;font-weight:700;border-radius:9px;border:1px solid var(--brd);background:var(--card);color:var(--mut)}
+.btns3 .b.on{color:#fff}.btns3 .b.on.h{background:var(--ok);border-color:var(--ok)}.btns3 .b.on.g{background:var(--bad);border-color:var(--bad)}.btns3 .b.on.e{background:#b26a00;border-color:#b26a00}.btns3 .b.on.l{background:#1565c0;border-color:#1565c0}
+.btns3 select.xs{width:84px;font-family:inherit;appearance:none;-webkit-appearance:none;text-align:center;text-align-last:center;padding:0 2px;font-size:10px}
+.row.r3.dflt .btns3 .b.on{opacity:.55}
+select.ex{width:100%;min-height:42px;font:inherit;border-radius:10px;border:1px solid #1565c0;padding:0 8px;background:var(--card);color:var(--fg,inherit)}
+input.note{width:100%;min-height:38px;font:inherit;font-size:13px;border-radius:10px;border:1px dashed var(--brd);padding:0 10px;background:transparent;color:inherit}
 </style></head><body>
 <header><h1><span>📋 حضور وغياب الطالبات</span><span class="sync" id="sync"></span></h1>
 <div class="tabs"><button id="t1" onclick="setTab('att')">تسجيل الحضور</button><button id="t2" onclick="setTab('rep')">التقرير اليومي</button><button id="t4" onclick="setTab('stu')" style="flex:0 0 auto">👩‍🎓 الطالبات</button><button id="t3" onclick="setTab('set')" style="flex:0 0 52px">⚙</button></div></header>
@@ -73,7 +82,7 @@ select{font:inherit;width:100%;padding:10px;border-radius:10px;border:1px solid 
   function fetchBoot(){return fetch(URL_+'?a=boot&k='+encodeURIComponent(K)).then(function(r){return r.json()}).then(function(j){if(j&&j.ok&&j.d){try{localStorage.setItem('att_boot_'+K,JSON.stringify(j.d))}catch(e){}return j.d}throw new Error('bad')})}
   function run(code,src){var s=document.createElement('script');if(code){s.text=code}else{s.src=src}document.body.appendChild(s)}
   function go(b){window.__BOOT=b;window.__K=K;var c=null;try{c=localStorage.getItem('att_appjs')}catch(e){}
-    if(c){run(c)}else{run(null,'app.js?v=6')}
+    if(c){run(c)}else{run(null,'app.js?v=14')}
     if(navigator.onLine){fetch(URL_+'?a=appjs').then(function(r){return r.text()}).then(function(t){if(t&&t.length>5000&&t.indexOf('window.__BOOT')>0){try{localStorage.setItem('att_appjs',t)}catch(e){}}}).catch(function(){})}}
   if(boot){go(boot);if(navigator.onLine)fetchBoot().catch(function(){})}
   else if(!navigator.onLine){msg('هذه أول مرة تفتحين فيها الرابط، ويلزم <b>إنترنت لمرة واحدة فقط</b> لتحميل قائمة الطالبات، وبعدها تعملين بدون إنترنت.')}
